@@ -1,3 +1,6 @@
+//! This is adapted from the tutorial at https://epi052.gitlab.io/notes-to-self/blog/2021-11-01-fuzzing-101-with-libafl/
+//! Instead of trying to fuzz the XPdf library, I've adjusted it to fuzz my own function that panics if the input is too long.
+
 use libafl::corpus::{InMemoryCorpus, OnDiskCorpus};
 use libafl::events::SimpleEventManager;
 use libafl::executors::{ExitKind, InProcessExecutor};
@@ -39,6 +42,9 @@ fn execute() {
 
 	let shmem_map = shmem.as_slice_mut();
 
+	// UNSAFE: Safe here since we only write to this shared memory here and then from now on
+	// we only read from it. The created shared memory is also of sufficient size to hold the 
+	// entire map that will be written into it.
 	let edges_observer = unsafe {
 		HitcountsMapObserver::new(StdMapObserver::new("shared_mem", shmem_map))
 	};
@@ -84,6 +90,7 @@ fn execute() {
 	fuzzer.fuzz_loop(&mut stages, &mut executor, &mut state, &mut manager).unwrap();
 }
 
+/// Function to test using the fuzzer
 fn crash_test(input : &[u8]) {
 	println!("Input: {:?}", input);
 	if input.len() > 110 {

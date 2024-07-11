@@ -1,3 +1,3 @@
 mod libafl;
 mod fuzzing101;
-mod fuzzgoat;
+mod fuzz_custom_vulnerable;
